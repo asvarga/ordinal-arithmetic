@@ -2,15 +2,13 @@
 import Prelude hiding ((^))
 import qualified Prelude as P ((^))
 
--- (Ord a n b) = a^n + b
-data Ordinal  = Ord  Ordinal Integer Ordinal -- In Cantor Normal Form
-              | Ord' Ordinal Integer Ordinal -- Arbitrary Ordinal
+data Ordinal  = Ord  Ordinal Integer Ordinal -- (Ord a n b) = a^n + b
               | Zero
               deriving Eq
 
 -- build Ordinals from lists
 ord :: [(Ordinal, Integer)] -> Ordinal
-ord = norm . (foldr (\(b, n) acc -> (Ord' b n acc)) Zero)
+ord = foldr (\(b, n) acc -> (Ord b n acc)) Zero where
 
 zero = fromInteger 0
 one = fromInteger 1
@@ -18,19 +16,8 @@ two = fromInteger 2
 three = fromInteger 3
 four = fromInteger 4
 five = fromInteger 5
-w = ord [(one, 1)]
+w = (Ord one 1 Zero)
 ω = w
-
-norm :: Ordinal -> Ordinal
-norm (Ord' ord' n Zero) = (Ord (norm ord') n Zero)
-norm (Ord' ord0' n0 rest') = 
-    let ord0 = norm ord0'
-        (Ord ord1 n1 rest) = norm rest'
-        in case (compare ord0 ord1) of
-            LT -> (Ord ord1 n1 rest)
-            EQ -> (Ord ord1 (n0+n1) rest)
-            GT -> (Ord ord0 n0 (Ord ord1 n1 rest))
-norm x = x
 
 instance Show Ordinal where
     show Zero = "0"
@@ -44,7 +31,6 @@ instance Show Ordinal where
             g n = "*" ++ (show n)
             h Zero = ""
             h rest = " + " ++ (show rest)
-    show x = "!{" ++ show (norm x) ++ "}"
 
 instance Ord Ordinal where
     compare Zero Zero = EQ
@@ -58,17 +44,15 @@ instance Ord Ordinal where
                 LT -> LT
                 GT -> GT
                 EQ -> compare rest0 rest1
-    compare x y = compare (norm x) (norm y)
-
-instance Semigroup Ordinal where
-    (<>) Zero x = x
-    (<>) (Ord ord n rest) x = (Ord' ord n (rest <> x))
-instance Monoid Ordinal where
-    mempty = Zero
 
 -- Based On: https://en.wikipedia.org/wiki/Ordinal_arithmetic#Cantor_normal_form
 instance Num Ordinal where
-    (+) x y = norm (x <> y)
+    (+) x Zero = x
+    (+) Zero y = y
+    (+) (Ord ord0 n0 rest0) (Ord ord1 n1 rest1) = case (compare ord0 ord1) of
+        LT -> (Ord ord1 n1 rest1)
+        GT -> (Ord ord0 n0 (rest0+(Ord ord1 n1 rest1)))
+        EQ -> (Ord ord0 (n0+n1) (rest0+rest1))
     (-) x Zero = x
     (-) Zero y = Zero
     (-) (Ord ord0 n0 rest0) (Ord ord1 n1 rest1) = case (compare ord0 ord1) of
@@ -101,17 +85,18 @@ instance Num Ordinal where
 
 --------
 
-a = ord [(two, 12), (one, 3), (zero, 5)]
-b = ord [(two, 12), (one, 4), (zero, 5)]
-c = ord [(a, 12), (two, 1), (one, 7), (zero, 3)]
-d = ord [(b, 12), (two, 1), (one, 7), (zero, 3)]
-e = ord [(three, 1), (one, 1)]
-f = ord [(five, 1), (three, 1)]
+a = w^2*12 + w*3 + 5
+b = w^2*12 + w*4 + 5
+c = w^a*12 + w^2 + w*7 + 3
+d = w^b*12 + w^2 + w*7 + 3
+e = w^3 + w
+f = w^5 + w^3
 
 main = do
-    print $ one + w
-    print $ ord [(one, 1), (three, 1)]
+    print $ (ω^3 + ω)^5
+    print $ (ω^5 + ω^3)^3    
     print $ "----"
+    print $ 1 + w
     print $ c
     print $ d
     print $ c + d
@@ -120,40 +105,28 @@ main = do
     print $ b
     print $ b - a
     print $ "----"
-    print $ a * three
-    print $ a * w
-    print $ a * b
+    print $ (w^4*3 + w^3*2 + w^2 + w^1*10 + 100)^5
+    print $ (w^w + w^3*2 + w^2)^2
+    print $ (w+2)^0
+    print $ (w+2)^1
+    print $ (w+2)^2
+    print $ (w+2)^3
+    print $ (w+2)^4
+    print $ (w+2)^5
     print $ "----"
-    print $ e
-    print $ f
-    print $ e ^ 5
-    print $ e ^ 5 == f ^ 3
-    print $ "----"
-    print $ e^five
-    print $ (ord [(four, 3), (three, 2), (two, 1), (one, 10), (zero, 100)])^five
-    print $ (ord [(w, 1), (three, 2), (two, 1)])^two
-    print $ (w+two)^one
-    print $ (w+two)^two
-    print $ (w+two)^three
-    print $ (w+two)^four
-    print $ (w+two)^five
-    print $ "----"
-    print $ two^zero
-    print $ two^w
-    print $ two^(w*three + three)
-    print $ two^(w^four + w^three + five)    
-    print $ two^(w^w)
+    print $ 2^0
+    print $ 2^w
+    print $ 2^(w*3 + 3)
+    print $ 2^(w^4 + w^3 + 5)    
+    print $ 2^(w^w)
     print $ "----"
     print $ w^(w^w)
-    print $ (w^w)^two
+    print $ (w^w)^2
     print $ (w^w)^w
-    print $ ((w^w)*three)^two
+    print $ ((w^w)*3)^2
     print $ (w^w)^(w^w)
     print $ "----"
-    print $ (w*w+two)^w
-    print $ ω^(ω^3 + ω^2)*32    -- (show . parse) is idempotent :)
-    print $ (ω^3 + ω)^5
-    print $ (ω^5 + ω^3)^3
+    print $ (w*w+2)^w
 
 
 

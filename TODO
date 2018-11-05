@@ -1,13 +1,6 @@
 
 TODO
 
-- remove Ord' constructor
-	- remove Monoid/Semigroup implementation
-	- remove norm
-		- implement (+) how norm was implemented
-	- keep ord?
-	- remove/neaten a lot of test cases
-		- replace two with 2, ord[(three, 1), ...] with w^3+...
 - set up haskell in Atom
 - set up liquid haskell (in Atom)
 - constrain Ordinal to be in normal form with liquid haskell
