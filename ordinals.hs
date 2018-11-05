@@ -19,6 +19,7 @@ three = fromInteger 3
 four = fromInteger 4
 five = fromInteger 5
 w = ord [(one, 1)]
+ω = w
 
 norm :: Ordinal -> Ordinal
 norm (Ord' ord' n Zero) = (Ord (norm ord') n Zero)
@@ -38,7 +39,6 @@ instance Show Ordinal where
         where
             f (Ord Zero 1 Zero) = "ω"
             f (Ord Zero x Zero) = "ω^" ++ (show x)
-            -- f (Ord (Ord Zero 1 Zero) 1 Zero) = "ω^ω"
             f ord = "ω^(" ++ (show ord) ++ ")"
             g 1 = ""
             g n = "*" ++ (show n)
@@ -88,17 +88,16 @@ instance Num Ordinal where
     fromInteger 0 = Zero
     fromInteger n = Ord Zero n Zero
 
-(^) :: Ordinal -> Ordinal -> Ordinal                  -- let 1 < n < ω:
-(^) x Zero = one                                      -- x^0 = 1
-(^) x (Ord Zero n Zero) = x P.^ n                         -- x^n uses repeated *
-(^) (Ord Zero 1 Zero) y = one                         -- 1^y = 1
-(^) (Ord Zero n Zero) (Ord y 1 Zero) =                -- n^(ω^y) = ω^(ω^(y-1)) 
-    (Ord (Ord (y-one) 1 Zero) 1 Zero)                   --   ex: 2^(ω^4) = ω^(ω^3)
-(^) (Ord (Ord a b c) n rest) y =                      -- (ω^x)^y = ω^(x*y)
-    (Ord ((Ord a b c)*y) 1 Zero)                        --   ex: (ω^ω)^3 = ω^(ω*3)
-(^) x (Ord y n Zero) = (x^(Ord y 1 Zero)) P.^ n         -- x^(y*n) = (x^y)^n
-(^) x (Ord y n z) = x^(Ord y n Zero) * x^z        -- x^(y+z) = x^y * x^z
-
+(^) :: Ordinal -> Ordinal -> Ordinal                -- let 1 < n < ω:
+(^) x Zero = one                                    -- x^0 = 1
+(^) x (Ord Zero n Zero) = x P.^ n                   -- x^n uses Prelude's ^
+(^) (Ord Zero 1 Zero) y = one                       -- 1^y = 1
+(^) (Ord Zero n Zero) (Ord y 1 Zero) =              -- n^(ω^y) = ω^(ω^(y-1)) 
+    (Ord (Ord (y-one) 1 Zero) 1 Zero)               --   ex: 2^(ω^4) = ω^(ω^3)
+(^) (Ord (Ord a b c) n rest) y =                    -- (ω^x)^y = ω^(x*y)
+    (Ord ((Ord a b c)*y) 1 Zero)                    --   ex: (ω^ω)^3 = ω^(ω*3)
+(^) x (Ord y n Zero) = (x^(Ord y 1 Zero)) P.^ n     -- x^(y*n) = (x^y)^n
+(^) x (Ord y n z) = x^(Ord y n Zero) * x^z          -- x^(y+z) = x^y * x^z
 
 --------
 
@@ -127,8 +126,8 @@ main = do
     print $ "----"
     print $ e
     print $ f
-    print $ e P.^ 5
-    print $ e P.^ 5 == f P.^ 3
+    print $ e ^ 5
+    print $ e ^ 5 == f ^ 3
     print $ "----"
     print $ e^five
     print $ (ord [(four, 3), (three, 2), (two, 1), (one, 10), (zero, 100)])^five
@@ -152,6 +151,10 @@ main = do
     print $ (w^w)^(w^w)
     print $ "----"
     print $ (w*w+two)^w
+    print $ ω^(ω^3 + ω^2)*32    -- (show . parse) is idempotent :)
+    print $ (ω^3 + ω)^5
+    print $ (ω^5 + ω^3)^3
+
 
 
 
