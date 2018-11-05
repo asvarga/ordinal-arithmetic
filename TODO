@@ -1,0 +1,8 @@
+TODO
+
+- set up haskell in Atom
+- set up liquid haskell (in Atom)
+- use Ordinal = Ord Ordinal Integer Ordinal | Zero 
+	- NFOrd = { v:Ordinal | "v is sorted" }
+- reimpement the rest
+- prove things?
