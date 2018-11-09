@@ -1,22 +1,37 @@
 
+-- An implementation of ordinal arithmetic
+-- Comments like {-@ ... @-} are for Liquid Haskell
+
+----------------------------------------------------------------
+
 import Prelude hiding ((^))
 import qualified Prelude as P ((^))
 
+{-@ data Ordinal [size] @-}     -- use 'size' to prove termination
 data Ordinal = Ord [(Ordinal, Integer)] -- (Ord (a, n):b) = a^n + b
              deriving Eq
 
--- build Ordinals from lists
-ord :: [(Ordinal, Integer)] -> Ordinal
-ord = foldr (\(a, n) (Ord b) -> (Ord ((a, n):b))) (Ord [])
+{-@ measure size @-}            -- size is a measure
+{-@ size :: Ordinal -> Nat @-}  -- LH provides Nat `subset` Integer
+size :: Ordinal -> Integer
+size (Ord []) = 0
+size (Ord ((a, n):b)) = (size a) + 1 + (size (Ord b))
 
-zero = fromInteger 0
-one = fromInteger 1
-two = fromInteger 2
-three = fromInteger 3
-four = fromInteger 4
-five = fromInteger 5
-w = (Ord [(one, 1)])
-ω = w
+-- {-@ type NFOrd ::  @-}
+
+
+-- build Ordinals from lists
+-- ord :: [(Ordinal, Integer)] -> Ordinal
+-- ord = foldr (\(a, n) (Ord b) -> (Ord ((a, n):b))) (Ord [])
+
+-- zero = fromInteger 0
+-- one = fromInteger 1
+-- two = fromInteger 2
+-- three = fromInteger 3
+-- four = fromInteger 4
+-- five = fromInteger 5
+-- w = (Ord [(one, 1)])
+-- ω = w
 
 instance Show Ordinal where
     show (Ord []) = "0"
@@ -45,31 +60,31 @@ instance Ord Ordinal where
                 EQ -> compare b0 b1
 
 -- Based On: https://en.wikipedia.org/wiki/Ordinal_arithmetic#Cantor_normal_form
-instance Num Ordinal where
-    (+) x (Ord []) = x
-    (+) (Ord []) y = y
-    (+) (Ord ((a0, n0):b0)) (Ord ((a1, n1):b1)) = case (compare a0 a1) of
-        LT -> (Ord ((a1, n1):b1))
-        GT -> (Ord a0 n0 (b0+(Ord ((a1, n1):b1))))
-        EQ -> (Ord a0 (n0+n1) (b0+b1))
-    -- (-) x (Ord []) = x
-    -- (-) (Ord []) y = (Ord [])
-    -- (-) (Ord ((a0, n0):b0)) (Ord ((a1, n1):b1)) = case (compare a0 a1) of
-    --     LT -> (Ord [])
-    --     GT -> (Ord ((a0, n0):b0))
-    --     EQ -> case (compare n0 n1) of
-    --         LT -> (Ord [])
-    --         GT -> (Ord a0 (n0-n1) b0)
-    --         EQ -> b0 - b1
-    -- (*) x (Ord []) = (Ord [])
-    -- (*) (Ord []) x = (Ord [])
-    -- (*) (Ord ((a0, n0):b0)) (Ord Zero n1 Zero) = (Ord a0 (n0*n1) b0)
-    -- (*) (Ord ((a0, n0):b0)) (Ord a1 n1 Zero) = (Ord (a0+a1) n1 Zero)
-    -- (*) x (Ord ((a1, n1):b1)) = x*(Ord a1 n1 Zero) + x*b1
-    abs x = x
-    signum x = one
-    fromInteger 0 = (Ord [])
-    fromInteger n = (Ord [(zero, n)])
+-- instance Num Ordinal where
+--     (+) x (Ord []) = x
+--     (+) (Ord []) y = y
+--     (+) (Ord ((a0, n0):b0)) (Ord ((a1, n1):b1)) = case (compare a0 a1) of
+--         LT -> (Ord ((a1, n1):b1))
+--         GT -> (Ord a0 n0 (b0+(Ord ((a1, n1):b1))))
+--         EQ -> (Ord a0 (n0+n1) (b0+b1))
+--     -- (-) x (Ord []) = x
+--     -- (-) (Ord []) y = (Ord [])
+--     -- (-) (Ord ((a0, n0):b0)) (Ord ((a1, n1):b1)) = case (compare a0 a1) of
+--     --     LT -> (Ord [])
+--     --     GT -> (Ord ((a0, n0):b0))
+--     --     EQ -> case (compare n0 n1) of
+--     --         LT -> (Ord [])
+--     --         GT -> (Ord a0 (n0-n1) b0)
+--     --         EQ -> b0 - b1
+--     -- (*) x (Ord []) = (Ord [])
+--     -- (*) (Ord []) x = (Ord [])
+--     -- (*) (Ord ((a0, n0):b0)) (Ord Zero n1 Zero) = (Ord a0 (n0*n1) b0)
+--     -- (*) (Ord ((a0, n0):b0)) (Ord a1 n1 Zero) = (Ord (a0+a1) n1 Zero)
+--     -- (*) x (Ord ((a1, n1):b1)) = x*(Ord a1 n1 Zero) + x*b1
+--     abs x = x
+--     signum x = one
+--     fromInteger 0 = (Ord [])
+--     fromInteger n = (Ord [(zero, n)])
 
 -- (^) :: Ordinal -> Ordinal -> Ordinal                -- let 1 < n < ω:
 -- (^) x Zero = one                                    -- x^0 = 1
