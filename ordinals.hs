@@ -1,8 +1,13 @@
 
+-- An implementation of ordinal arithmetic
+-- Comments like {-@ ... @-} are for Liquid Haskell
+
+----------------------------------------------------------------
+
 import Prelude hiding ((^))
 import qualified Prelude as P ((^))
 
-{-@ data Ordinal [size] @-}
+{-@ data Ordinal [size] @-}     -- use size as a measure to prove termination
 data Ordinal = Ord Ordinal Integer Ordinal -- (Ord a n b) = a^n + b
              | Zero
              deriving Eq
@@ -13,13 +18,15 @@ size :: Ordinal -> Integer
 size Zero = 1
 size (Ord a n b) = (size a) + 1 + (size b)
 
+-- {-@ IsNormal :: Ordinal -> Bool @-}
+{-@ predicate IsNormal x = (isNormal x) @-}
 isNormal :: Ordinal -> Bool
 isNormal Zero = True
 isNormal (Ord a n Zero) = isNormal a
 isNormal (Ord a0 n0 (Ord a1 n1 b)) = 
     (isNormal a0) && (a0 > a1) && (isNormal (Ord a1 n1 b))
 
-{-@ type NFOrd = { o:Ordinal | isNormal o } @-}
+{-@ type NFOrd = { o:Ordinal | IsNormal o } @-}     -- Ordinals in Cantor Normal Form
 
 -- build Ordinals from lists
 -- ord :: [(Ordinal, Integer)] -> Ordinal
@@ -47,18 +54,23 @@ isNormal (Ord a0 n0 (Ord a1 n1 b)) =
 --             h Zero = ""
 --             h b = " + " ++ (show b)
 
-instance Ord Ordinal where
-    compare Zero Zero = EQ
-    compare Zero (Ord x y z) = LT
-    compare (Ord x y z) Zero = GT
-    compare (Ord a0 n0 b0) (Ord a1 n1 b1) = 
-        case (compare a0 a1) of
+-- compare :: Ordinal -> Ordinal -> Ordering
+
+{-@ compareOrd :: NFOrd -> NFOrd -> Ordering @-}
+compareOrd Zero Zero = EQ
+compareOrd Zero (Ord a n b) = LT
+compareOrd (Ord a n b) Zero = GT
+compareOrd (Ord a0 n0 b0) (Ord a1 n1 b1) = 
+    case (compare a0 a1) of
+        LT -> LT
+        GT -> GT
+        EQ -> case (compare n0 n1) of
             LT -> LT
             GT -> GT
-            EQ -> case (compare n0 n1) of
-                LT -> LT
-                GT -> GT
-                EQ -> compare b0 b1
+            EQ -> compare b0 b1
+instance Ord Ordinal where 
+    compare = compareOrd
+    
 
 -- -- Based On: https://en.wikipedia.org/wiki/Ordinal_arithmetic#Cantor_normal_form
 -- instance Num Ordinal where
