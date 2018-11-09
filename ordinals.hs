@@ -127,6 +127,7 @@ main = do
     print $ (w^w)^(w^w)
     print $ "----"
     print $ (w*w+2)^w
+    print $ w*(w^2)
 
 
 
