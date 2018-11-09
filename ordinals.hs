@@ -1,6 +1,7 @@
 
 -- An implementation of ordinal arithmetic
 -- Comments like {-@ ... @-} are for Liquid Haskell
+-- To type-check with LH: liquid --exact-data-cons ordinals.hs
 
 ----------------------------------------------------------------
 
@@ -12,21 +13,22 @@ data Ordinal = Ord Ordinal Integer Ordinal -- (Ord a n b) = a^n + b
              | Zero
              deriving Eq
 
+-- Refined type of Ordinals in Cantor Normal Form
+{-@ type NFOrd = { o:Ordinal | (isNormal o) } @-}
+
 {-@ measure size @-}
 {-@ size :: Ordinal -> Nat @-}
 size :: Ordinal -> Integer
 size Zero = 1
 size (Ord a n b) = (size a) + 1 + (size b)
 
--- {-@ IsNormal :: Ordinal -> Bool @-}
-{-@ predicate IsNormal x = (isNormal x) @-}
+{-@ reflect isNormal @-}
 isNormal :: Ordinal -> Bool
 isNormal Zero = True
 isNormal (Ord a n Zero) = isNormal a
 isNormal (Ord a0 n0 (Ord a1 n1 b)) = 
     (isNormal a0) && (a0 > a1) && (isNormal (Ord a1 n1 b))
 
-{-@ type NFOrd = { o:Ordinal | IsNormal o } @-}     -- Ordinals in Cantor Normal Form
 
 -- build Ordinals from lists
 -- ord :: [(Ordinal, Integer)] -> Ordinal
