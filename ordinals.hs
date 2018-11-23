@@ -1,53 +1,49 @@
 
 -- An implementation of ordinal arithmetic
--- Comments like {-@ ... @-} are for Liquid Haskell
--- To type-check with LH: liquid --exact-data-cons ordinals.hs
+-- Liquid Haskell is used to require all Ordinals to be in Cantor Normal Form
+    -- Comments like {-@ ... @-} are for LH
+    -- To type-check with LH, run: liquid ordinals.hs
 
 ----------------------------------------------------------------
+
+{-@ LIQUID "--reflection" @-}
 
 --import Prelude hiding ((^))
 --import qualified Prelude as P ((^))
 
--- {-@ data Ordinal [size] @-}     -- use size as a measure to prove termination
-data Ordinal = Ord Ordinal Integer Ordinal -- (Ord a n b) = a^n + b
+
+
+
+
+
+
+
+
+--  TODO:
+--    LH isn't using < on Ordinals at all
+--    fix and use fromInteger
+
+
+
+
+
+
+
+
+
+----------------------------------------------------------------
+
+-- (Ord a n b) = a^n + b
+-- require Cantor Normal Form and use the measure "size" to check termination
+-- the "v == Zero" is because degree is truncated to be >= Zero
+{-@ data Ordinal [size] 
+    = Ord { a :: Ordinal, 
+            n :: Nat,  
+            b :: {v:Ordinal | (compOrd (degree v) a == LT) || v == Zero } }
+    | Zero {} @-}
+data Ordinal = Ord Ordinal Integer Ordinal
              | Zero
              deriving Eq
-
-{-@ data Ordinal [size] = Ord {a :: Ordinal, n :: Integer,  b :: (DegreeLT a)}
-                        | Zero {} @-}
-
-
--- {-@ measure degree @-}
--- degree :: Ordinal -> Ordinal
--- degree Zero = Zero             -- actually degree + 1
--- degree (Ord a n b) = suc a where
---     suc Zero = (Ord Zero 1 Zero)
---     suc (Ord a n b) = case a of
---         Zero -> (Ord Zero (n+1) b)
---         _ -> (Ord a n (suc b))
--- {-@ type DegreeLT D = {v:Ordinal | (degree v) <= D} @-}
-
-
-{-@ type DegreeLT D = {v:Ordinal | (degree v) < D || v == Zero} @-}
-{-@ measure degree @-}
-degree :: Ordinal -> Ordinal
-degree Zero = Zero        
-degree (Ord a n b) = a
-
-zero = Zero
-one = (Ord Zero 1 Zero)
-w = (Ord one 1 Zero)
-ω = w
-
--- Refined type of Ordinals in Cantor Normal Form
-{-@ type NFOrd = { o:Ordinal | (isNormal o) } @-}
-
--- {-@
--- data Ordinal <p :: a -> a -> Prop> where
---     | []  :: [a] <p>
---     | (:) :: h:a -> [a<p h>]<p> -> [a]<p>
--- @-}
-
 
 {-@ measure size @-}
 {-@ size :: Ordinal -> Nat @-}
@@ -55,118 +51,88 @@ size :: Ordinal -> Integer
 size Zero = 1
 size (Ord a n b) = (size a) + 1 + (size b)
 
--- {-@ measure isNormal @-}
--- isNormal :: Ordinal -> Bool
--- isNormal Zero = True
--- isNormal (Ord a0 n0 b0) = (isNormal a0) && (isNormal b0) && (case b0 of 
---     Zero -> True
---     (Ord a1 n1 b1) -> (compareOrd a0 a1 == GT))-- (a0 > a1))
+{-@ measure degree @-}
+degree :: Ordinal -> Ordinal
+degree Zero = Zero              -- truncated
+degree (Ord a n b) = a
 
--- {-@ measure suc @-}
--- suc :: Ordinal -> Ordinal
--- suc Zero = (Ord Zero 1 Zero)
--- suc (Ord a n b) = case a of
---     Zero -> (Ord Zero (n+1) b)
---     _ -> (Ord a n (suc b))
+{-@ reflect compInt @-}
+{-@ compInt :: Integer -> Integer -> Ordering @-}
+compInt :: Integer -> Integer -> Ordering
+compInt x y = if x < y  then LT else if x == y then EQ else GT
 
-
--- {-@ reflect isNormal @-}
--- isNormal :: Ordinal -> Bool
--- isNormal Zero = True
--- isNormal (Ord a n Zero) = isNormal a
--- isNormal (Ord a0 n0 (Ord a1 n1 b)) =
---     (isNormal a0) && (a0 > a1) && (isNormal (Ord a1 n1 b))
-
-
--- build Ordinals from lists
--- ord :: [(Ordinal, Integer)] -> Ordinal
--- ord = foldr (\(b, n) acc -> (Ord b n acc)) Zero where
-
--- fromInt :: Integer -> Ordinal
--- fromInt 0 = Zero
--- fromInt n = Ord Zero n Zero
-
--- zero = fromInt 0
--- one = fromInt 1
--- two = fromInt 2
--- three = fromInt 3
--- four = fromInt 4
--- five = fromInt 5
--- w = (Ord one 1 Zero)
--- ω = w
-
--- instance Show Ordinal where
---     show Zero = "0"
---     show (Ord Zero n Zero) = (show n)
---     show (Ord a n b) = (f a) ++ (g n) ++ (h b)
---         where
---             f (Ord Zero 1 Zero) = "ω"
---             f (Ord Zero x Zero) = "ω^" ++ (show x)
---             f a = "ω^(" ++ (show a) ++ ")"
---             g 1 = ""
---             g n = "*" ++ (show n)
---             h Zero = ""
---             h b = " + " ++ (show b)
-
--- compare :: Ordinal -> Ordinal -> Ordering
-
--- {-@ compareOrd :: NFOrd -> NFOrd -> Ordering @-}
--- {-@ measure compareOrd @-}
-compareOrd :: Ordinal -> Ordinal -> Ordering
-compareOrd Zero Zero = EQ
-compareOrd Zero (Ord a n b) = LT
-compareOrd (Ord a n b) Zero = GT
-compareOrd (Ord a0 n0 b0) (Ord a1 n1 b1) =
-    case (compareOrd a0 a1) of
+{-@ reflect compOrd @-}
+compOrd :: Ordinal -> Ordinal -> Ordering
+compOrd Zero Zero = EQ
+compOrd Zero (Ord a n b) = LT
+compOrd (Ord a n b) Zero = GT
+compOrd (Ord a0 n0 b0) (Ord a1 n1 b1) =
+    case (compOrd a0 a1) of
         LT -> LT
         GT -> GT
-        EQ -> case (compare n0 n1) of
+        EQ -> case (compInt n0 n1) of
             LT -> LT
             GT -> GT
-            EQ -> compareOrd b0 b1
--- instance Ord Ordinal where 
-    -- compare = compareOrd
+            EQ -> (compOrd b0 b1)
 
--- {-@ addOrd :: NFOrd -> NFOrd -> NFOrd @-}
--- addOrd :: Ordinal -> Ordinal -> Ordinal
--- addOrd x Zero = x
--- addOrd Zero y = y
--- addOrd (Ord a0 n0 b0) (Ord a1 n1 b1) = case (compareOrd a0 a1) of
---     LT -> (Ord a1 n1 b1)
---     GT -> (Ord a0 n0 (addOrd b0 (Ord a1 n1 b1)))
---     EQ -> (Ord a0 (n0+n1) (addOrd b0 b1))
+instance Ord Ordinal where compare = compOrd
+
+instance Show Ordinal where
+    show Zero = "0"
+    show (Ord Zero n Zero) = (show n)
+    show (Ord a n b) = (f a) ++ (g n) ++ (h b)
+        where
+            f (Ord Zero 1 Zero) = "ω"
+            f (Ord Zero x Zero) = "ω^" ++ (show x)
+            f a = "ω^(" ++ (show a) ++ ")"
+            g 1 = ""
+            g n = "*" ++ (show n)
+            h Zero = ""
+            h b = " + " ++ (show b)
+
+----------------------------------------------------------------
+
+
+one = (Ord Zero 1 Zero) -- 1
+w   = (Ord one 1 Zero)  -- omega
+ω   = w
+
+
+
+
+
+
 
 
 -- Based On: https://en.wikipedia.org/wiki/Ordinal_arithmetic#Cantor_normal_form
--- instance Num Ordinal where
---     -- (+) x y = x
---     (-) x y = x
---     (*) x y = x
-
---     (+) x Zero = x
---     (+) Zero y = y
---     (+) (Ord a0 n0 b0) (Ord a1 n1 b1) = case (compareOrd a0 a1) of
---         LT -> (Ord a1 n1 b1)
---         GT -> (Ord a0 n0 (b0+(Ord a1 n1 b1)))
---         EQ -> (Ord a0 (n0+n1) (b0+b1))
---     -- (-) x Zero = x
---     -- (-) Zero y = Zero
---     -- (-) (Ord a0 n0 b0) (Ord a1 n1 b1) = case (compare a0 a1) of
---     --     LT -> Zero
---     --     GT -> (Ord a0 n0 b0)
---     --     EQ -> case (compare n0 n1) of
---     --         LT -> Zero
---     --         GT -> (Ord a0 (n0-n1) b0)
---     --         EQ -> b0 - b1
---     -- (*) x Zero = Zero
---     -- (*) Zero x = Zero
---     -- (*) (Ord a0 n0 b0) (Ord Zero n1 Zero) = (Ord a0 (n0*n1) b0)
---     -- (*) (Ord a0 n0 b0) (Ord a1 n1 Zero) = (Ord (a0+a1) n1 Zero)
---     -- (*) x (Ord a1 n1 b1) = x*(Ord a1 n1 Zero) + x*b1
---     abs x = x
---     signum x = one
---     fromInteger 0 = Zero
---     fromInteger n = Ord Zero n Zero
+instance Num Ordinal where
+    (+) _ _ = 0
+    (-) _ _ = 0
+    (*) _ _ = 0
+    -- (+) x Zero = x
+    -- (+) Zero y = y
+    -- (+) (Ord a0 n0 b0) (Ord a1 n1 b1) = case (compare a0 a1) of
+    --     LT -> (Ord a1 n1 b1)
+    --     GT -> (Ord a0 n0 (b0+(Ord a1 n1 b1)))
+    --     EQ -> (Ord a0 (n0+n1) (b0+b1))
+    -- (-) x Zero = x
+    -- (-) Zero y = Zero
+    -- (-) (Ord a0 n0 b0) (Ord a1 n1 b1) = case (compare a0 a1) of
+    --     LT -> Zero
+    --     GT -> (Ord a0 n0 b0)
+    --     EQ -> case (compare n0 n1) of
+    --         LT -> Zero
+    --         GT -> (Ord a0 (n0-n1) b0)
+    --         EQ -> b0 - b1
+    -- (*) x Zero = Zero
+    -- (*) Zero x = Zero
+    -- (*) (Ord a0 n0 b0) (Ord Zero n1 Zero) = (Ord a0 (n0*n1) b0)
+    -- (*) (Ord a0 n0 b0) (Ord a1 n1 Zero) = (Ord (a0+a1) n1 Zero)
+    -- (*) x (Ord a1 n1 b1) = x*(Ord a1 n1 Zero) + x*b1
+    abs x = x
+    signum x = 1
+    fromInteger 0 = Zero
+    fromInteger n = Ord Zero n Zero
 
 -- (^) :: Ordinal -> Ordinal -> Ordinal                -- let 1 < n < ω:
 -- (^) x Zero = one                                    -- x^0 = 1
@@ -188,7 +154,12 @@ compareOrd (Ord a0 n0 b0) (Ord a1 n1 b1) =
 -- e = w^3 + w
 -- f = w^5 + w^3
 
--- main = do
+main = do
+    print $ w
+    print $ degree one
+    -- print $ (degree one) < w
+    print $ Ord w 2 one
+
 --     print $ (ω^3 + ω)^5
 --     print $ (ω^5 + ω^3)^3
 --     print $ "----"
@@ -226,8 +197,8 @@ compareOrd (Ord a0 n0 b0) (Ord a1 n1 b1) =
 --     print $ w*(w^2)
 
 
-main = do
-    print $ "hello"
+-- main = do
+--     print $ "hello"
 
 
 
