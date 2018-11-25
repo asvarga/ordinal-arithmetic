@@ -1,6 +1,4 @@
 
 TODO
 
-- set up haskell in VS Code, with liquid haskell
-- constrain Ordinal to be in normal form with liquid haskell
-- prove things?
+- fromInteger but with proof
