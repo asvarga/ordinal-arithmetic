@@ -107,19 +107,60 @@ fromInteger' = nat2ord . abs' . fromIntegral
 
 
 
+{-@ reflect addOrd' @-}
+addOrd' :: Ordinal -> Ordinal -> Ordinal
+addOrd' x Zero = x
+addOrd' Zero y = y
+addOrd' x@(Ord a0 n0 b0) y@(Ord a1 n1 b1) = case (compOrd a0 a1) of
+    LT -> y
+    GT -> (Ord a0 n0 (addOrd' b0 y))
+    EQ -> (Ord a0 (n0+n1) (addOrd' b0 b1))
+
+
+-- READ THIS: https://arxiv.org/pdf/1806.03541.pdf
+
+-- {-@ normal_add :: x:NFOrd -> y:NFOrd -> {normal (addOrd' x y)} / [(size x) + (size y)] @-}
+-- normal_add x y
+--     | y == Zero
+--     = normal (addOrd' x Zero)
+--     *** QED
+
+--     | x == Zero
+--     = normal (addOrd' Zero y)
+--     *** QED
+
+--     | otherwise
+--     = let (Ord a0 n0 b0, Ord a1 n1 b1) = (x, y) in 
+--         case (compOrd a0 a1) of
+--             LT -> [addOrd' x y == y] *** QED
+--             GT -> trivial *** QED
+--             EQ -> [ normal a0,
+--                     n0 > 0,
+--                     n1 > 0,
+--                     n0+n1 > 0, 
+--                     normal b0, 
+--                     normal b1, 
+--                     normal (addOrd' b0 b1), 
+--                     case (addOrd' b0 b1) of
+--                         Zero -> True
+--                         (Ord c _ _) -> (compOrd c a0 == LT),
+--                     addOrd' x y == (Ord a0 (n0+n1) (addOrd' b0 b1)),
+--                     normal (addOrd' x y)]
+--                 *** QED
 
 
 
 
--- {-@ addOrd :: Ordinal -> Ordinal -> Ordinal @-}
--- addOrd :: Ordinal -> Ordinal -> Ordinal
--- addOrd x Zero = x
--- addOrd Zero y = y
--- addOrd (Ord a0 n0 b0) (Ord a1 n1 b1) = case (compOrd a0 a1) of
---     LT -> (Ord a1 n1 b1)
---     GT -> (Ord a0 n0 (addOrd b0 (Ord a1 n1 b1)))
---     EQ -> (Ord a0 (n0+n1) (addOrd b0 b1))
+ -- normal a0
+ --                ==> n0+n1 > 0
+ --                ==> 
 
+
+-- ∵
+
+
+
+--{-@ addOrd :: NFOrd -> NFOrd -> NFOrd @-}
 
 
 
@@ -140,7 +181,8 @@ five = 2+3
 main = do
     print $ "start"
     print $ compOrd w (nat2ord 3)
-    print $ five
+    -- print $ addOrd (nat2ord 2) (nat2ord 3)
+
     -- print $ normal x
     -- print $ degree one
     -- print $ w
