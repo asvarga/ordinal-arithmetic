@@ -4,19 +4,26 @@
 -- {-@ LIQUID "--ple" @-}
 {-@ LIQUID "--higherorder"     @-}
 
-import Language.Haskell.Liquid.ProofCombinators
+-- import Language.Haskell.Liquid.ProofCombinators
+import ProofCombinators
+
+-- {-@ die :: {v:String | false} -> a @-}
+-- die :: String -> a
+-- die msg = error msg
+-- {-@ lAssert  :: {v:Bool | v == True} -> a -> a @-}
+-- lAssert True  x = x
+-- lAssert False _ = die "yikes, assertion fails!"
+-- yes = lAssert (1 + 1 == 2) ()
+-- -- no  = lAssert (1 + 1 == 3) ()
 
 ----------------------------------------------------------------
 
 -- (Ord a n b) = a^n + b
 -- require Cantor Normal Form and use the measure "size" to check termination
 {-@ data Ordinal [size] @-}
-{-@ type NFOrd = {v:Ordinal | normal v} @-}
 data Ordinal = Ord Ordinal Int Ordinal
              | Zero
              deriving (Eq, Show)
-
-{-@ type Pos = {v:Int | v > 0} @-}
 
 {-@ measure size @-}
 {-@ size :: Ordinal -> Nat @-}
@@ -24,12 +31,34 @@ size :: Ordinal -> Int
 size Zero = 0
 size (Ord a n b) = (size a) + 1 + (size b)
 
+{-@ type NFOrd = {v:Ordinal | normal v} @-}
 {-@ reflect normal @-}
 normal :: Ordinal -> Bool
 normal Zero = True
 normal (Ord a n b) = (normal a) && (n > 0) && (normal b) && (case b of
     Zero -> True
     (Ord c _ _) -> (compOrd c a == LT))
+
+{-@ type Pos = {v:Int | v > 0} @-}
+
+----------------------------------------------------------------
+
+-- instance Show Ordinal where
+--     show Zero = "0"
+--     show (Ord Zero n Zero) = (show n)
+--     show (Ord a n b) = (f a) ++ (g n) ++ (h b)
+--         where
+--             f (Ord Zero 1 Zero) = "ω"
+--             f (Ord Zero x Zero) = "ω^" ++ (show x)
+--             f a = "ω^(" ++ (show a) ++ ")"
+--             g 1 = ""
+--             g n = "*" ++ (show n)
+--             h Zero = ""
+--             h b = " + " ++ (show b)
+
+----------------------------------------------------------------
+
+instance Ord Ordinal where compare = compOrd
 
 {-@ reflect compInt @-}
 compInt :: Int -> Int -> Ordering
@@ -48,38 +77,37 @@ compOrd (Ord a0 n0 b0) (Ord a1 n1 b1) =
             LT -> LT
             GT -> GT
             EQ -> (compOrd b0 b1)
-instance Ord Ordinal where compare = compOrd
 
--- {-@ zero :: NFOrd @-}
--- zero = let zero' = Zero in castWithTheorem [normal Zero] zero'
--- {-@ one :: NFOrd @-}
--- one = let one' = Ord Zero 1 Zero in castWithTheorem [normal Zero, normal one'] one'
--- {-@ w :: NFOrd @-}
--- w = let w' = Ord one 1 Zero in castWithTheorem [normal Zero, normal w'] w'
+----------------------------------------------------------------
 
-
-
+instance Num Ordinal where
+    (+) _ _ = Zero
+    (-) _ _ = Zero
+    (*) _ _ = Zero
+    abs x = x
+    signum x = (Ord Zero 1 Zero)
+    fromInteger = fromInteger'
 
 {-@ reflect nat2ord' @-}
-nat2ord' :: Int -> Ordinal
 nat2ord' 0 = Zero
 nat2ord' p = Ord Zero p Zero
-
 {-@ normal_nat :: n:Nat -> {normal (nat2ord' n)} @-}
-normal_nat :: Int -> ()
 normal_nat n = [normal Zero, normal (nat2ord' n)] *** QED 
-
 {-@ nat2ord :: Nat -> NFOrd @-}
-nat2ord :: Int -> Ordinal
-nat2ord n = castWithTheorem (normal_nat n) (nat2ord' n) where
+nat2ord n = castWithTheorem (normal_nat n) (nat2ord' n)
+{-@ abs' :: Int -> Nat @-}
+abs' :: Int -> Int
+abs' n
+  | 0 < n     = n
+  | otherwise = 0 - n
+{-@ fromInteger' :: Integer -> NFOrd @-}
+fromInteger' = nat2ord . abs' . fromIntegral
 
 
-{-@ zero :: NFOrd @-}
-zero = nat2ord 0
-{-@ one :: NFOrd @-}
-one = nat2ord 1
-{-@ w :: NFOrd @-}
-w = let w = (Ord one 1 Zero) in castWithTheorem [normal Zero, normal w] w
+
+
+
+
 
 
 
@@ -95,10 +123,24 @@ w = let w = (Ord one 1 Zero) in castWithTheorem [normal Zero, normal w] w
 
 
 
--- err = (Ord Zero 1 w)
+
+
+----------------------------------------------------------------
+
+{-@ zero :: NFOrd @-}
+zero = nat2ord 0
+{-@ one :: NFOrd @-}
+one = nat2ord 1
+{-@ w :: NFOrd @-}
+w = let w = (Ord one 1 Zero) in castWithTheorem [normal Zero, normal w] w
+
+five :: Ordinal
+five = 2+3
 
 main = do
     print $ "start"
+    print $ compOrd w (nat2ord 3)
+    print $ five
     -- print $ normal x
     -- print $ degree one
     -- print $ w

@@ -1,0 +1,11 @@
+{
+	"shell_cmd": "runhaskell \"$file\"",
+	"file_regex": "^(...*?):([0-9]*):?([0-9]*)",
+	"selector": "source.haskell",
+	"variants": [
+		{
+			"name": "With Liquid",
+        	"shell_cmd": "liquid \"$file\" | gsed -r \"s/\\x1B\\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g\" && echo \"\n\" && runhaskell \"$file\""
+		}
+	]
+}
