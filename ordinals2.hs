@@ -4,8 +4,8 @@
 -- {-@ LIQUID "--ple" @-}
 {-@ LIQUID "--higherorder"     @-}
 
--- import Language.Haskell.Liquid.ProofCombinators
-import ProofCombinators
+-- import Language.Haskell.Liquid.NewProofCombinators
+import NewProofCombinators
 
 -- {-@ die :: {v:String | false} -> a @-}
 -- die :: String -> a
@@ -92,9 +92,18 @@ instance Num Ordinal where
 nat2ord' 0 = Zero
 nat2ord' p = Ord Zero p Zero
 {-@ normal_nat :: n:Nat -> {normal (nat2ord' n)} @-}
-normal_nat n = [normal Zero, normal (nat2ord' n)] *** QED 
+normal_nat 0 =   normal (nat2ord' 0)
+             === normal Zero
+             === True
+             *** QED
+normal_nat p =   normal (nat2ord' p)
+             === normal (Ord Zero p Zero)
+             === normal Zero
+             === True
+             *** QED
+-- normal_nat n = [normal Zero, normal (nat2ord' n)] *** QED 
 {-@ nat2ord :: Nat -> NFOrd @-}
-nat2ord n = castWithTheorem (normal_nat n) (nat2ord' n)
+nat2ord n = (nat2ord' n) `withProof` (normal_nat n)
 {-@ abs' :: Int -> Nat @-}
 abs' :: Int -> Int
 abs' n
@@ -120,33 +129,26 @@ addOrd' x@(Ord a0 n0 b0) y@(Ord a1 n1 b1) = case (compOrd a0 a1) of
 -- READ THIS: https://arxiv.org/pdf/1806.03541.pdf
 
 -- {-@ normal_add :: x:NFOrd -> y:NFOrd -> {normal (addOrd' x y)} / [(size x) + (size y)] @-}
--- normal_add x y
---     | y == Zero
---     = normal (addOrd' x Zero)
---     *** QED
+-- normal_add x Zero = normal (addOrd' x Zero) *** QED
+-- normal_add Zero y = normal (addOrd' Zero y) *** QED
+-- normal_add x@(Ord a0 n0 b0) y@(Ord a1 n1 b1) = case (compOrd a0 a1) of
+--     LT -> [addOrd' x y == y] *** QED
+--     GT -> [addOrd' x y == (Ord a0 n0 (addOrd' b0 y))] *** QED
+--     EQ -> [addOrd' x y == (Ord a0 (n0+n1) (addOrd' b0 b1))] *** QED
 
---     | x == Zero
---     = normal (addOrd' Zero y)
---     *** QED
-
---     | otherwise
---     = let (Ord a0 n0 b0, Ord a1 n1 b1) = (x, y) in 
---         case (compOrd a0 a1) of
---             LT -> [addOrd' x y == y] *** QED
---             GT -> trivial *** QED
---             EQ -> [ normal a0,
---                     n0 > 0,
---                     n1 > 0,
---                     n0+n1 > 0, 
---                     normal b0, 
---                     normal b1, 
---                     normal (addOrd' b0 b1), 
---                     case (addOrd' b0 b1) of
---                         Zero -> True
---                         (Ord c _ _) -> (compOrd c a0 == LT),
---                     addOrd' x y == (Ord a0 (n0+n1) (addOrd' b0 b1)),
---                     normal (addOrd' x y)]
---                 *** QED
+            -- [ normal a0,
+            --         n0 > 0,
+            --         n1 > 0,
+            --         n0+n1 > 0, 
+            --         normal b0, 
+            --         normal b1, 
+            --         normal (addOrd' b0 b1), 
+            --         case (addOrd' b0 b1) of
+            --             Zero -> True
+            --             (Ord c _ _) -> (compOrd c a0 == LT),
+            --         addOrd' x y == (Ord a0 (n0+n1) (addOrd' b0 b1)),
+            --         normal (addOrd' x y)]
+            --     *** QED
 
 
 
@@ -173,7 +175,7 @@ zero = nat2ord 0
 {-@ one :: NFOrd @-}
 one = nat2ord 1
 {-@ w :: NFOrd @-}
-w = let w = (Ord one 1 Zero) in castWithTheorem [normal Zero, normal w] w
+w = let w = (Ord one 1 Zero) in w `withProof` [normal Zero, normal w]
 
 five :: Ordinal
 five = 2+3
