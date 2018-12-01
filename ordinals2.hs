@@ -85,6 +85,44 @@ maxOrd a b = case (compOrd a b) of
     GT -> a
     EQ -> a
 
+{-@ comp_i_i_EQ :: i:Int -> {(compInt i i == EQ)} @-}
+comp_i_i_EQ :: Int -> ()
+comp_i_i_EQ i = compInt i i === EQ *** QED
+
+{-@ comp_x_x_EQ :: x:Ordinal -> {(compOrd x x == EQ)} @-}
+comp_x_x_EQ :: Ordinal -> ()
+comp_x_x_EQ Zero = compOrd Zero Zero === EQ *** QED
+comp_x_x_EQ (Ord a n b) =   compOrd (Ord a n b) (Ord a n b)
+                        ==? EQ ? (comp_x_x_EQ a &&& comp_i_i_EQ n &&& comp_x_x_EQ b) 
+                        *** QED 
+
+{-@ eq_is_eq :: x:Ordinal -> y:Ordinal -> {(compOrd x y == EQ) <=> (x == y)} @-}
+eq_is_eq :: Ordinal -> Ordinal -> ()
+eq_is_eq Zero Zero = ((compOrd Zero Zero == EQ) == (Zero == Zero)) *** QED
+eq_is_eq Zero (Ord a1 n1 b1) = 
+    ((compOrd Zero (Ord a1 n1 b1) == EQ) == (Zero == (Ord a1 n1 b1))) *** QED
+eq_is_eq (Ord a0 n0 b0) Zero = 
+    ((compOrd (Ord a0 n0 b0) Zero == EQ) == ((Ord a0 n0 b0) == Zero)) *** QED
+eq_is_eq (Ord a0 n0 b0) (Ord a1 n1 b1) =  
+    ((compOrd (Ord a0 n0 b0) (Ord a1 n1 b1) == EQ) == ((Ord a0 n0 b0) == (Ord a1 n1 b1)))
+    === (case (compOrd a0 a1) of
+            LT -> (False == ((Ord a0 n0 b0) == (Ord a1 n1 b1))) 
+                   ==? True ? (comp_x_x_EQ a0)
+            GT -> (False == ((Ord a0 n0 b0) == (Ord a1 n1 b1)))
+                   ==? True ? (comp_x_x_EQ a0)
+            EQ -> case (compInt n0 n1) of
+                LT -> (False == ((Ord a0 n0 b0) == (Ord a1 n1 b1))) === True
+                GT -> (False == ((Ord a0 n0 b0) == (Ord a1 n1 b1))) === True
+                EQ -> ((compOrd (Ord a0 n0 b0) (Ord a1 n1 b1) == EQ) == ((Ord a0 n0 b0) == (Ord a1 n1 b1)))
+                       === (((compOrd b0 b1) == EQ) == (b0 == b1))
+                       ==? True ? (eq_is_eq b0 b1 &&& comp_x_x_EQ b0))
+    *** QED
+
+
+Try eq is eq with ints first, and then try ords
+
+
+
 ----------------------------------------------------------------
 
 instance Num Ordinal where
@@ -133,50 +171,65 @@ addOrd' Zero y = y
 addOrd' x@(Ord a0 n0 b0) y@(Ord a1 n1 b1) = case (compOrd a1 a0) of
     GT -> y
     LT -> (Ord a0 n0 (addOrd' b0 y))
-    EQ -> (Ord a0 (n0+n1) (addOrd' b0 b1))
+    EQ -> (Ord a1 (n0+n1) (addOrd' b0 b1))
 
 
 -- READ THIS: https://arxiv.org/pdf/1806.03541.pdf
 
-{-@ normal_add :: x:NFOrd -> y:NFOrd -> {normal (addOrd' x y)} / [(size x), (size y)] @-}
-normal_add :: Ordinal -> Ordinal -> ()
+-- {-@ normal_add :: x:NFOrd -> y:NFOrd -> {normal (addOrd' x y)} / [(size x), (size y)] @-}
+-- normal_add :: Ordinal -> Ordinal -> ()
 -- normal_add x Zero = ()
 -- normal_add Zero y = ()
 -- normal_add x@(Ord a0 n0 b0) y@(Ord a1 n1 b1) = (normal_add b0 b1) &&& (normal_add b0 y)
-
 
 
 -- LEMMA: compOrd x y == op (compOrd y x) where
 --     op LT = GT
 --     op EQ = EQ
 --     op GT = LT
+-- LEMMA: compOrd x y == EQ -> x == y
 
 
 
-normal_add x Zero = normal (addOrd' x Zero) *** QED
-normal_add Zero y = normal (addOrd' Zero y) *** QED
--- normal_add x@(Ord a0 n0 b0) y@(Ord a1 n1 b1) = 
+-- normal_add x Zero = normal (addOrd' x Zero) *** QED
+-- normal_add Zero y = normal (addOrd' Zero y) *** QED
+-- -- normal_add x@(Ord a0 n0 b0) y@(Ord a1 n1 b1) = 
+-- --     let evidence = ((normal x == True *** QED)
+-- --                  &&& (normal y == True *** QED)
+-- --                  &&& normal_add b0 b1
+-- --                  &&& normal_add b0 y)
+-- --     in  (normal (addOrd' (Ord a0 n0 b0) (Ord a1 n1 b1)) 
+-- --     === (case (compOrd a1 a0) of
+-- --             GT -> (normal y === True)
+-- --             LT -> (normal (Ord a0 n0 (addOrd' b0 y)) ==? True ? evidence)
+-- --             EQ -> (normal (Ord a0 (n0+n1) (addOrd' b0 b1)) ==? True ? evidence))
+-- --     *** QED)
+-- normal_add x@(Ord a0 n0 b0) y@(Ord a1 n1 b1@Zero) = 
 --     let evidence = ((normal x == True *** QED)
 --                  &&& (normal y == True *** QED)
 --                  &&& normal_add b0 b1
 --                  &&& normal_add b0 y)
---     in  (normal (addOrd' (Ord a0 n0 b0) (Ord a1 n1 b1)) 
+--     in  (normal (addOrd' (Ord a0 n0 b0) (Ord a1 n1 Zero)) 
 --     === (case (compOrd a1 a0) of
 --             GT -> (normal y === True)
 --             LT -> (normal (Ord a0 n0 (addOrd' b0 y)) ==? True ? evidence)
---             EQ -> (normal (Ord a0 (n0+n1) (addOrd' b0 b1)) ==? True ? evidence))
+--             EQ -> (normal (Ord a1 (n0+n1) (addOrd' b0 Zero)) ==? True ? evidence))
 --     *** QED)
-normal_add x@(Ord a0 n0 b0@Zero) y@(Ord a1 n1 b1@Zero) = 
-    let evidence = ((normal x == True *** QED)
-                 &&& (normal y == True *** QED)
-                 &&& normal_add b0 b1
-                 &&& normal_add Zero y)
-    in  (normal (addOrd' (Ord a0 n0 Zero) (Ord a1 n1 Zero)) 
-    === (case (compOrd a1 a0) of
-            GT -> (normal y === True)
-            LT -> (normal (Ord a0 n0 (addOrd' Zero y)) ==? True ? evidence)
-            EQ -> (normal (Ord a0 (n0+n1) (addOrd' Zero Zero)) ==? True ? evidence))
-    *** QED)
+-- -- maybe change b0@Zero -> b0?
+-- -- normal_add x@(Ord a0 n0 b0@Zero) y@(Ord a1 n1 b1@(Ord c1 m1 d1)) = 
+-- --     let evidence = ((normal x == True *** QED)
+-- --                  &&& (normal y == True *** QED)
+-- --                  &&& (compOrd c1 a0 == LT *** QED)
+-- --                  &&& (a0 == a1 *** QED)
+-- --                  &&& (n0+n1 > 0 *** QED)
+-- --                  &&& normal_add Zero b1
+-- --                  &&& normal_add Zero y)
+-- --     in  (normal (addOrd' (Ord a0 n0 Zero) (Ord a1 n1 (Ord c1 m1 d1))) 
+-- --     === (case (compOrd a1 a0) of
+-- --             GT -> (normal y === True)
+-- --             LT -> (normal (Ord a0 n0 (addOrd' Zero y)) ==? True ? evidence)
+-- --             EQ -> (normal (Ord a0 (n0+n1) (addOrd' Zero b1 === b1)) ==? True ? evidence))
+-- --     *** QED)
 
     -- let evidence = ((normal x == True *** QED)
     --                  &&& (normal y == True *** QED)

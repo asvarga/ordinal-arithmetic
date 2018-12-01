@@ -10,6 +10,7 @@ TODO
 LEARNED
 - "not a subtype of Required type VV : {VV : GHC.Prim.Addr# | 5 < 4}" indicates a totality issue
 - LH doesn't know that: compOrd x y == op (compOrd y x) where (op LT = GT) etc.
+	- also: compOrd x y == EQ -> x == y
 - it's easier to work case by case from the outside before doing the below
 
 
