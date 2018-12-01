@@ -1,9 +1,15 @@
 
 TODO
 
-- refine add, mul, etc.
-	- Read This: https://arxiv.org/pdf/1806.03541.pdf
-
+- refine 
+	- mul
+	- sub
+- organize
+	- pull important refinements to top
+- typeclass stuff
+	- make Ordinal an instance of Num and refine args to only accept NFOrds
+		- essentially want "instance Num NFOrd where"
+	- get Haskell + LH to automatically cast Ints to Ordinals with fromInteget it get it
 
 
 
@@ -11,6 +17,10 @@ LEARNED
 - "not a subtype of Required type VV : {VV : GHC.Prim.Addr# | 5 < 4}" indicates a totality issue
 - LH doesn't know that: compOrd x y == op (compOrd y x) where (op LT = GT) etc.
 	- also: compOrd x y == EQ -> x == y
+- in case splits reiterate the preceding term during development
+	- t === case _ of 
+		_ -> t === s === ...
+		_ -> t === r === ...
 - it's easier to work case by case from the outside before doing the below
 
 
