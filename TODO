@@ -4,3 +4,32 @@ TODO
 - refine add, mul, etc.
 	- Read This: https://arxiv.org/pdf/1806.03541.pdf
 
+
+
+
+LEARNED
+- "not a subtype of Required type VV : {VV : GHC.Prim.Addr# | 5 < 4}" indicates a totality issue
+- LH doesn't know that: compOrd x y == op (compOrd y x) where (op LT = GT) etc.
+- it's easier to work case by case from the outside before doing the below
+
+
+
+
+General Proving Strategy
+- Manually expand terms with equational reasoning
+- Turn certain terms t into (t === s) or (t ==? s ? P)
+- When some "? P" is used multiple times, raise it to some location where it can be reused with a "let evidence = P in" or "let evidence = (evidence &&& P) in"
+
+
+f x = case x of
+	one y -> t1 ==? True ? P
+	zero y -> t2 ==? True ? P
+
+
+
+
+
+
+
+
+
