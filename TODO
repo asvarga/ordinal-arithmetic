@@ -1,6 +1,7 @@
 
 TODO
 
+- LEMMA: comp x y == op (comp y x) 
 - refine 
 	- mul
 	- sub
@@ -10,13 +11,12 @@ TODO
 	- make Ordinal an instance of Num and refine args to only accept NFOrds
 		- essentially want "instance Num NFOrd where"
 	- get Haskell + LH to automatically cast Ints to Ordinals with fromInteget it get it
+	- also implement Ord with compare
 
 
 
 LEARNED
 - "not a subtype of Required type VV : {VV : GHC.Prim.Addr# | 5 < 4}" indicates a totality issue
-- LH doesn't know that: compOrd x y == op (compOrd y x) where (op LT = GT) etc.
-	- also: compOrd x y == EQ -> x == y
 - in case splits reiterate the preceding term during development
 	- t === case _ of 
 		_ -> t === s === ...

@@ -5,6 +5,9 @@
 -- {-@ LIQUID "--higherorder"     @-}
 
 
+{-@ type Pos = {v:Int | v > 0} @-}
+
+
 
 {-@ normal_nat :: n:Nat -> {normal (nat2ord' n)} @-}
 -- normal_nat 0 = ()
