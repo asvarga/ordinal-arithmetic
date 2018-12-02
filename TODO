@@ -1,10 +1,7 @@
 
 TODO
 
-- LEMMA: comp x y == op (comp y x) 
-- refine 
-	- mul
-	- sub
+- refine exponentiation
 - organize
 	- pull important refinements to top
 - typeclass stuff
