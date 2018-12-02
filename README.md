@@ -1,7 +1,7 @@
 
 # Ordinal Arithmetic
 
-A verified Liquid Haskell implementation of ordinal arithmetic.
+A (somewhat) verified Liquid Haskell implementation of ordinal arithmetic.
 
 ### Files
 
@@ -31,10 +31,9 @@ To type-check refinements and proofs:
 ### TODO
 
 - prove closure under exponentiation
-- organize
-    - pull important refinements to top of file?
-- get LH to work better with typeclasses
+- decouple LH from main haskell (if possible)
+- get LH to work properly with typeclasses (if possible)
     - instance Num NFOrd where ...
     - instance Ord NFOrd where ...
     - get LH to understand casting of Ints to Ordinals with fromInteger
-- silence [these warnings](https://github.com/ucsd-progsys/liquidhaskell/issues/1242) 
+- silence [these warnings](https://github.com/ucsd-progsys/liquidhaskell/issues/1242) (if possible)

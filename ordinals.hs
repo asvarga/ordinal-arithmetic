@@ -142,7 +142,7 @@ main = do
     print $ (w+2)^4
     print $ (w+2)^5
     print $ "----"
-    print $ 2^0
+    print $ 2^Zero
     print $ 2^w
     print $ 2^(w*3 + 3)
     print $ 2^(w^4 + w^3 + 5)
@@ -157,6 +157,7 @@ main = do
     print $ "----"
     print $ (w*w+2)^w
     print $ w*(w^2)
+    print $ Zero^1
 
 
 -- main = do

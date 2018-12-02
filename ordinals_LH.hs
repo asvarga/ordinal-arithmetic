@@ -25,7 +25,7 @@ data Ordinal = Ord Ordinal Int Ordinal
 {-@ size :: Ordinal -> Nat @-}
 size :: Ordinal -> Int
 size Zero = 0
-size (Ord a n b) = (size a) + 1 + (size b)
+size (Ord a n b) = 1 + (size a) + n*n + (size b)
 
 {-@ type NFOrd = {v:Ordinal | normal v} @-}
 {-@ reflect normal @-}
@@ -34,6 +34,11 @@ normal Zero = True
 normal (Ord a n b) = (normal a) && (n > 0) && (normal b) && (case b of
     Zero -> True
     (Ord c _ _) -> (comp c a == LT))
+
+{-@ n2o :: Nat -> NFOrd @-}
+{-@ add :: NFOrd -> NFOrd -> NFOrd @-}
+{-@ sub :: NFOrd -> NFOrd -> NFOrd @-}
+{-@ mul :: NFOrd -> NFOrd -> NFOrd @-}
 
 ----------------------------------------------------------------
 
@@ -131,25 +136,35 @@ instance Num Ordinal where
     (*) x y = Zero -- mul (norm x) (norm y) ???
     abs x = x
     signum x = (Ord Zero 1 Zero)
-    fromInteger = fromInteger' -- nat2ord . abs' . fromIntegral
+    fromInteger = fromInteger' -- n2o . abs' . fromIntegral
 
 ----
 
-{-@ reflect nat2ord' @-}
-nat2ord' 0 = Zero
-nat2ord' p = Ord Zero p Zero
-{-@ normal_nat :: n:Nat -> {normal (nat2ord' n)} @-}
+{-@ reflect n2o' @-}
+n2o' 0 = Zero
+n2o' p = Ord Zero p Zero
+{-@ normal_nat :: n:Nat -> {normal (n2o' n)} @-}
 normal_nat :: Int -> ()
-normal_nat p = normal (nat2ord' p) === normal Zero *** QED
-{-@ nat2ord :: Nat -> NFOrd @-}
-nat2ord n = (nat2ord' n) `withProof` (normal_nat n)
+normal_nat p = normal (n2o' p) === normal Zero *** QED
+-- {-@ n2o :: Nat -> NFOrd @-}
+n2o n = (n2o' n) `withProof` (normal_nat n)
 {-@ abs' :: Int -> Nat @-}
 abs' :: Int -> Int
 abs' n
   | 0 < n     = n
   | otherwise = 0 - n
 {-@ fromInteger' :: Integer -> NFOrd @-}
-fromInteger' = nat2ord . abs' . fromIntegral
+fromInteger' = n2o . abs' . fromIntegral
+
+
+{-@ zero :: NFOrd @-}
+zero    = n2o 0
+{-@ one :: NFOrd @-}
+one     = n2o 1
+{-@ w :: NFOrd @-}
+w       = let w = (Ord one 1 Zero) in w `withProof` [normal Zero, normal w]
+{-@ ω :: NFOrd @-}
+ω       = w
 
 ----
 
@@ -175,7 +190,7 @@ normal_add x@(Ord a0 n0 b0) y@(Ord a1 n1 b1) = normal (add' x y)
                  &&& eq_is_eq a1 a0
                  &&& normal_add b0 b1
                  &&& normal_add b0 y) *** QED
-{-@ add :: NFOrd -> NFOrd -> NFOrd @-}
+-- {-@ add :: NFOrd -> NFOrd -> NFOrd @-}
 add x y = (add' x y) `withProof` (normal_add x y)
 
 ----
@@ -206,13 +221,13 @@ normal_sub x@(Ord a0 n0 b0) y@(Ord a1 n1 b1) = normal (sub' x y)
     ==? True ? ((normal x *** QED)
                  &&& (normal y *** QED)
                  &&& normal_sub b0 b1) *** QED
-{-@ sub :: NFOrd -> NFOrd -> NFOrd @-}
+-- {-@ sub :: NFOrd -> NFOrd -> NFOrd @-}
 sub x y = (sub' x y) `withProof` (normal_sub x y)
 
 ----
 
 {-@ reflect mul' @-}
-{-@ mul' :: x:Ordinal -> y:Ordinal -> Ordinal / [(size x), (size y)] @-}
+{-@ mul' :: x:_ -> y:_ -> _ / [(size x), (size y)] @-}
 mul' :: Ordinal -> Ordinal -> Ordinal
 mul' x Zero = Zero
 mul' Zero x = Zero
@@ -240,23 +255,14 @@ normal_mul x y@(Ord a1 n1 b1) = normal (mul' x y)
             &&& normal_mul x b1
             &&& normal_add (mul' x (Ord a1 n1 Zero)) (mul' x b1))
     *** QED
-{-@ mul :: NFOrd -> NFOrd -> NFOrd @-}
+-- {-@ mul :: NFOrd -> NFOrd -> NFOrd @-}
 mul x y = (mul' x y) `withProof` (normal_mul x y)
 
 ----------------------------------------------------------------
 
-{-@ zero :: NFOrd @-}
-zero    = nat2ord 0
-{-@ one :: NFOrd @-}
-one     = nat2ord 1
-{-@ w :: NFOrd @-}
-w       = let w = (Ord one 1 Zero) in w `withProof` [normal Zero, normal w]
-ω       = w
-
 main = do
     print $ "start"
-    print $ comp w (nat2ord 3)
-    print $ (w `mul` w `mul` (nat2ord 5)) `add` one `add` one
+    print $ (w `mul` w `mul` (n2o 5)) `add` one `add` one
     
 
 
