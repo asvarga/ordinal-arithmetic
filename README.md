@@ -5,7 +5,7 @@
 ### Files
 
 - **ordinals.hs** : Plain Haskell implementation
-- **ordinals_LH.hs** : Liquid Haskell implementation
+- **ordinals_LH.hs** : Liquid Haskell implementation 
 - **Haskell.sublime-build** : Build file for LH with Sublime
 - **NewProofCombinators.hs** : File copied from LH repo because of dependency issues
 
@@ -22,6 +22,11 @@ LH is used to prove:
 - termination of all functions
 - totality of all functions
 
+To test the liquid types and proofs:
+
+1. [Install LH](https://github.com/ucsd-progsys/liquidhaskell/blob/develop/INSTALL.md)
+2. Run `liquid ordinals_LH.hs`
+
 ### TODO
 
 - prove closure under exponentiation
@@ -31,3 +36,4 @@ LH is used to prove:
     - instance Num NFOrd where ...
     - instance Ord NFOrd where ...
     - get LH to understand casting of Ints to Ordinals with fromInteger
+- silence [these warnings](https://github.com/ucsd-progsys/liquidhaskell/issues/1242) 

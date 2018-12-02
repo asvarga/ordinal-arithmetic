@@ -8,7 +8,7 @@
 
 {-@ LIQUID "--reflection" @-}
 
-module O where
+module O where      -- keeps LH error messages legible
 
 import NewProofCombinators
 
