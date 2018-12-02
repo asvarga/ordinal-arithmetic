@@ -43,9 +43,6 @@ instance Show Ordinal where
 
 instance Ord Ordinal where compare = comp
 
-compInt :: Int -> Int -> Ordering
-compInt x y = if x < y then LT else if x == y then EQ else GT
-
 comp :: Ordinal -> Ordinal -> Ordering
 comp Zero Zero = EQ
 comp Zero (Ord a n b) = LT
@@ -54,7 +51,7 @@ comp (Ord a0 n0 b0) (Ord a1 n1 b1) =
     case (a0 `comp` a1) of
         LT -> LT
         GT -> GT
-        EQ -> case (n0 `compInt` n1) of
+        EQ -> case (n0 `compare` n1) of
             LT -> LT
             GT -> GT
             EQ -> (b0 `comp` b1)
@@ -80,16 +77,16 @@ w   = (Ord one 1 Zero)  -- omega
 instance Num Ordinal where
     (+) x Zero = x
     (+) Zero y = y
-    (+) (Ord a0 n0 b0) (Ord a1 n1 b1) = case (compare a0 a1) of
+    (+) (Ord a0 n0 b0) (Ord a1 n1 b1) = case (a0 `compare` a1) of
         LT -> (Ord a1 n1 b1)
         GT -> (Ord a0 n0 (b0+(Ord a1 n1 b1)))
         EQ -> (Ord a0 (n0+n1) (b0+b1))
     (-) x Zero = x
     (-) Zero y = Zero
-    (-) (Ord a0 n0 b0) (Ord a1 n1 b1) = case (compare a0 a1) of
+    (-) (Ord a0 n0 b0) (Ord a1 n1 b1) = case (a0 `compare` a1) of
         LT -> Zero
         GT -> (Ord a0 n0 b0)
-        EQ -> case (compare n0 n1) of
+        EQ -> case (n0 `compare` n1) of
             LT -> Zero
             GT -> (Ord a0 (n0-n1) b0)
             EQ -> b0 - b1
