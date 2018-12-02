@@ -151,11 +151,12 @@ main = do
     print $ 2^(w^4 + w^3 + 5)
     print $ 2^(w^w)
     print $ "----"
+    print $ 2^(w^w)
     print $ w^(w^w)
+    print $ (w^w)^(w^w)
     print $ (w^w)^2
     print $ (w^w)^w
     print $ ((w^w)*3)^2
-    print $ (w^w)^(w^w)
     print $ "----"
     print $ (w*w+2)^w
     print $ w*(w^2)

@@ -38,7 +38,7 @@ normal (Ord a n b) = (normal a) && (n > 0) && (normal b) && (case b of
 ----------------------------------------------------------------
 
 -- to distinguish from Ints:
-natStyle x = "[" ++ x ++ "]"
+natStyle x = x -- "[" ++ x ++ "]"
 
 instance Show Ordinal where
     show Zero = natStyle "0"
@@ -246,22 +246,18 @@ mul x y = (mul' x y) `withProof` (normal_mul x y)
 ----------------------------------------------------------------
 
 {-@ zero :: NFOrd @-}
-zero = nat2ord 0
+zero    = nat2ord 0
 {-@ one :: NFOrd @-}
-one = nat2ord 1
+one     = nat2ord 1
 {-@ w :: NFOrd @-}
-w = let w = (Ord one 1 Zero) in w `withProof` [normal Zero, normal w]
+w       = let w = (Ord one 1 Zero) in w `withProof` [normal Zero, normal w]
+ω       = w
 
 main = do
     print $ "start"
     print $ comp w (nat2ord 3)
-    print $ one `add` one `add` one
-    -- print $ add (nat2ord 2) (nat2ord 3)
-
-    -- print $ normal x
-    -- print $ degree one
-    -- print $ w
-    -- print $ comp (degree one) w
+    print $ (w `mul` w `mul` (nat2ord 5)) `add` one `add` one
+    
 
 
 
