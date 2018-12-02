@@ -4,6 +4,7 @@
 	"selector": "source.haskell",
 	"variants": [
 		{
+			// Use cmd+shift+B to build with a variant
 			"name": "With Liquid",
         	"shell_cmd": "liquid \"$file\" | gsed -r \"s/\\x1B\\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g\" && echo \"\n\" && runhaskell \"$file\""
 		}

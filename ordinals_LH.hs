@@ -2,15 +2,14 @@
 -- An implementation of ordinal arithmetic
 -- Liquid Haskell is used to require all Ordinals to be in Cantor Normal Form
     -- Comments like {-@ ... @-} are for LH
-    -- To type-check with LH, run: liquid ordinals.hs
+    -- To type-check with LH, run: liquid ordinals_LH.hs
 
 ----------------------------------------------------------------  
 
-module O where
-
 {-@ LIQUID "--reflection" @-}
 
--- import Language.Haskell.Liquid.NewProofCombinators
+module O where
+
 import NewProofCombinators
 
 ----------------------------------------------------------------
