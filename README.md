@@ -1,6 +1,7 @@
 
-
 # Ordinal Arithmetic
+
+A verified Liquid Haskell implementation of ordinal arithmetic.
 
 ### Files
 
@@ -22,7 +23,7 @@ LH is used to prove:
 - termination of all functions
 - totality of all functions
 
-To test the liquid types and proofs:
+To type-check refinements and proofs:
 
 1. [Install LH](https://github.com/ucsd-progsys/liquidhaskell/blob/develop/INSTALL.md)
 2. Run `liquid ordinals_LH.hs`
