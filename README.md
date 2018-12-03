@@ -33,7 +33,6 @@ To type-check refinements and proofs:
 - prove closure under exponentiation
 - decouple LH from main haskell (if possible)
 - get LH to work properly with typeclasses (if possible)
-    - instance Num NFOrd where ...
-    - instance Ord NFOrd where ...
     - get LH to understand casting of Ints to Ordinals with fromInteger
+    - get rid of withProof variants and rename add' to add etc.
 - silence [these warnings](https://github.com/ucsd-progsys/liquidhaskell/issues/1242) (if possible)

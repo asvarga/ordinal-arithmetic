@@ -146,7 +146,6 @@ main = do
     print $ 2^w
     print $ 2^(w*3 + 3)
     print $ 2^(w^4 + w^3 + 5)
-    print $ 2^(w^w)
     print $ "----"
     print $ 2^(w^w)
     print $ w^(w^w)

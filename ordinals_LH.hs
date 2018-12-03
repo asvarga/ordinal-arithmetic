@@ -16,6 +16,7 @@ import NewProofCombinators
 
 -- (Ord a n b) = a^n + b
 -- require Cantor Normal Form and use the measure "size" to check termination
+-- see: https://en.wikipedia.org/wiki/Ordinal_arithmetic#Cantor_normal_form
 {-@ data Ordinal [size] @-}
 data Ordinal = Ord Ordinal Int Ordinal
              | Zero
@@ -35,19 +36,30 @@ normal (Ord a n b) = (normal a) && (n > 0) && (normal b) && (case b of
     Zero -> True
     (Ord c _ _) -> (comp c a == LT))
 
-{-@ n2o :: Nat -> NFOrd @-}
-{-@ add :: NFOrd -> NFOrd -> NFOrd @-}
-{-@ sub :: NFOrd -> NFOrd -> NFOrd @-}
-{-@ mul :: NFOrd -> NFOrd -> NFOrd @-}
+{-@ instance Ord NFOrd where compare :: NFOrd -> NFOrd -> Ordering @-}
+instance Ord Ordinal where compare = comp
 
-----------------------------------------------------------------
+{-@ 
+instance Num NFOrd where 
+    (+) :: NFOrd -> NFOrd -> NFOrd  ;
+    (-) :: NFOrd -> NFOrd -> NFOrd  ;
+    (*) :: NFOrd -> NFOrd -> NFOrd  ;
+    abs :: NFOrd -> NFOrd           ;
+    signum :: NFOrd -> NFOrd        ;
+    fromInteger :: Integer -> NFOrd
+@-}
+instance Num Ordinal where
+    (+) = add'  -- TODO: why doesn't add work?
+    (-) = sub'  -- TODO: why doesn't sub work?
+    (*) = mul'  -- TODO: why doesn't mul work?
+    abs = id
+    signum = const one
+    fromInteger = n2o' . abs' . fromIntegral
 
--- to distinguish from Ints:
-natStyle x = x -- "[" ++ x ++ "]"
-
+{-@ instance Show NFOrd where show :: NFOrd -> String @-}
 instance Show Ordinal where
-    show Zero = natStyle "0"
-    show (Ord Zero n Zero) = natStyle (show n)
+    show Zero = "0"
+    show (Ord Zero n Zero) = (show n)
     show (Ord a n b) = (f a) ++ (g n) ++ (h b)
         where
             f (Ord Zero 1 Zero) = "ω"
@@ -60,7 +72,7 @@ instance Show Ordinal where
 
 ----------------------------------------------------------------
 
-instance Ord Ordinal where compare = comp
+---- INSTANCE ORD ----
 
 {-@ reflect compInt @-}
 compInt :: Int -> Int -> Ordering
@@ -129,16 +141,7 @@ op_comp x@(Ord a0 n0 b0) y@(Ord a1 n1 b1) = (x `comp` y == op (y `comp` x))
 
 ----------------------------------------------------------------
 
--- Based On: https://en.wikipedia.org/wiki/Ordinal_arithmetic#Cantor_normal_form
-instance Num Ordinal where
-    (+) x y = Zero -- add (norm x) (norm y) ???
-    (-) x y = Zero -- sub (norm x) (norm y) ???
-    (*) x y = Zero -- mul (norm x) (norm y) ???
-    abs x = x
-    signum x = (Ord Zero 1 Zero)
-    fromInteger = fromInteger' -- n2o . abs' . fromIntegral
-
-----
+---- INSTANCE NUM ---- 
 
 {-@ reflect n2o' @-}
 n2o' 0 = Zero
@@ -146,15 +149,13 @@ n2o' p = Ord Zero p Zero
 {-@ normal_nat :: n:Nat -> {normal (n2o' n)} @-}
 normal_nat :: Int -> ()
 normal_nat p = normal (n2o' p) === normal Zero *** QED
--- {-@ n2o :: Nat -> NFOrd @-}
+{-@ n2o :: Nat -> NFOrd @-}
 n2o n = (n2o' n) `withProof` (normal_nat n)
 {-@ abs' :: Int -> Nat @-}
 abs' :: Int -> Int
 abs' n
   | 0 < n     = n
   | otherwise = 0 - n
-{-@ fromInteger' :: Integer -> NFOrd @-}
-fromInteger' = n2o . abs' . fromIntegral
 
 
 {-@ zero :: NFOrd @-}
@@ -190,7 +191,7 @@ normal_add x@(Ord a0 n0 b0) y@(Ord a1 n1 b1) = normal (add' x y)
                  &&& eq_is_eq a1 a0
                  &&& normal_add b0 b1
                  &&& normal_add b0 y) *** QED
--- {-@ add :: NFOrd -> NFOrd -> NFOrd @-}
+{-@ add :: NFOrd -> NFOrd -> NFOrd @-}
 add x y = (add' x y) `withProof` (normal_add x y)
 
 ----
@@ -221,7 +222,7 @@ normal_sub x@(Ord a0 n0 b0) y@(Ord a1 n1 b1) = normal (sub' x y)
     ==? True ? ((normal x *** QED)
                  &&& (normal y *** QED)
                  &&& normal_sub b0 b1) *** QED
--- {-@ sub :: NFOrd -> NFOrd -> NFOrd @-}
+{-@ sub :: NFOrd -> NFOrd -> NFOrd @-}
 sub x y = (sub' x y) `withProof` (normal_sub x y)
 
 ----
@@ -255,14 +256,19 @@ normal_mul x y@(Ord a1 n1 b1) = normal (mul' x y)
             &&& normal_mul x b1
             &&& normal_add (mul' x (Ord a1 n1 Zero)) (mul' x b1))
     *** QED
--- {-@ mul :: NFOrd -> NFOrd -> NFOrd @-}
+{-@ mul :: NFOrd -> NFOrd -> NFOrd @-}
 mul x y = (mul' x y) `withProof` (normal_mul x y)
 
 ----------------------------------------------------------------
 
 main = do
     print $ "start"
-    print $ (w `mul` w `mul` (n2o 5)) `add` one `add` one
+    print $ (w `mul` w `mul` (fromInteger 5)) `add` one `add` one
+    -- print $ w * 5                                    -- TODO
+    -- print $ (w * w * (fromInteger 5)) + one + one    -- TODO
+    print $ compare one w
+    print $ abs w * signum w
+    print $ w * (fromInteger 5)
     
 
 
