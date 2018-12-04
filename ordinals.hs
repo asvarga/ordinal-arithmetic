@@ -6,7 +6,7 @@ import qualified Prelude as P ((^))
 
 ----------------------------------------------------------------
 
--- (Ord a n b) = a^n + b
+-- (Ord a n b) = ω^a * n + b
 data Ordinal = Ord Ordinal Int Ordinal
              | Zero
              deriving Eq

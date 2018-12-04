@@ -42,29 +42,14 @@ normal (Ord a n b) = (normal a) && (n > 0) && (normal b) && (case b of
 {-@ data NFO = NFO { nfo :: NFOrd } @-}
 data NFO = NFO Ordinal deriving (Eq)
 
-{-@ zero :: NFO @-}
 zero    = NFO zero'
-{-@ one :: NFO @-}
 one     = NFO one'
-{-@ w :: NFO @-}
 w       = NFO w'
-{-@ ω :: NFO @-}
 ω       = w
-{-@ ww :: NFO @-}
 ww      = NFO ww'
 
-{-@ instance Ord NFO where compare :: NFO -> NFO -> Ordering @-}
 instance Ord NFO where compare (NFO x) (NFO y) = comp x y
 
-{-@ 
-instance Num NFO where 
-    (+) :: NFO -> NFO -> NFO        ;
-    (-) :: NFO -> NFO -> NFO        ;
-    (*) :: NFO -> NFO -> NFO        ;
-    abs :: NFO -> NFO               ;
-    signum :: NFO -> NFO            ;
-    fromInteger :: Integer -> NFO
-@-}
 instance Num NFO where
     (+) (NFO x) (NFO y) = NFO $ add x y 
     (-) (NFO x) (NFO y) = NFO $ sub x y
@@ -73,7 +58,6 @@ instance Num NFO where
     signum = const one
     fromInteger i = NFO $ n2o . abs' . fromIntegral $ i
 
-{-@ instance Show NFO where show :: NFO -> String @-}
 instance Show NFO where show (NFO x) = str x
 
 ----------------------------------------------------------------
@@ -284,7 +268,6 @@ str (Ord a n b) = (f a) ++ (g n) ++ (h b) where
 ----------------------------------------------------------------
 
 main = do
-    print $ "start"
     print $ w + 1
     print $ 1 + w
     print $ ww * w
