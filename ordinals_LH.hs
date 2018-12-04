@@ -14,8 +14,7 @@ import NewProofCombinators
 
 ----------------------------------------------------------------
 
--- (Ord a n b) = a^n + b
--- use the measure "size" to check termination
+-- (Ord a n b) = ω^a * n + b
 {-@ data Ordinal [size] @-}
 data Ordinal = Ord Ordinal Int Ordinal
              | Zero
@@ -51,6 +50,8 @@ one     = NFO one'
 w       = NFO w'
 {-@ ω :: NFO @-}
 ω       = w
+{-@ ww :: NFO @-}
+ww      = NFO ww'
 
 {-@ instance Ord NFO where compare :: NFO -> NFO -> Ordering @-}
 instance Ord NFO where compare (NFO x) (NFO y) = comp x y
@@ -169,6 +170,8 @@ zero'   = n2o 0
 one'    = n2o 1
 {-@ w' :: NFOrd @-}
 w'      = let w' = (Ord one' 1 Zero) in w' `withProof` [normal Zero, normal w']
+{-@ ww' :: NFOrd @-}
+ww'     = let ww' = (Ord w' 1 Zero) in ww' `withProof` [normal Zero, normal ww']
 
 ----
 
@@ -269,22 +272,25 @@ mul x y = (mul' x y) `withProof` (normal_mul x y)
 str :: Ordinal -> String
 str Zero = "0"
 str (Ord Zero n Zero) = (show n)
-str (Ord a n b) = (f a) ++ (g n) ++ (h b)
-    where
-        f (Ord Zero 1 Zero) = "ω"
-        f (Ord Zero n Zero) = "ω^" ++ (show n)
-        f a = "ω^(" ++ (str a) ++ ")"
-        g 1 = ""
-        g n = "*" ++ (show n)
-        h Zero = ""
-        h b = " + " ++ (str b)
+str (Ord a n b) = (f a) ++ (g n) ++ (h b) where
+    f (Ord Zero 1 Zero) = "ω"
+    f (Ord Zero n Zero) = "ω^" ++ (show n)
+    f a = "ω^(" ++ (str a) ++ ")"
+    g 1 = ""
+    g n = "*" ++ (show n)
+    h Zero = ""
+    h b = " + " ++ (str b)
 
 ----------------------------------------------------------------
 
 main = do
     print $ "start"
+    print $ w + 1
+    print $ 1 + w
+    print $ ww * w
+    print $ w * ww
     print $ w * 5
-    print $ (w * w * 5) + one + one
+    print $ w + ww*3 + w*w*5 + w + 2
     print $ compare one w
     print $ abs w * signum w
     
