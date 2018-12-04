@@ -1,6 +1,6 @@
 
 -- An implementation of ordinal arithmetic
--- Liquid Haskell is used to require all Ordinals to be in Cantor Normal Form
+-- Liquid Haskell is used to require all Ordinals (NFO) to be in Cantor Normal Form
     -- Comments like {-@ ... @-} are for LH
     -- To type-check with LH, run: liquid ordinals_LH.hs
 
@@ -15,12 +15,11 @@ import NewProofCombinators
 ----------------------------------------------------------------
 
 -- (Ord a n b) = a^n + b
--- require Cantor Normal Form and use the measure "size" to check termination
--- see: https://en.wikipedia.org/wiki/Ordinal_arithmetic#Cantor_normal_form
+-- use the measure "size" to check termination
 {-@ data Ordinal [size] @-}
 data Ordinal = Ord Ordinal Int Ordinal
              | Zero
-             deriving (Eq)
+             deriving (Eq, Show)
 
 {-@ measure size @-}
 {-@ size :: Ordinal -> Nat @-}
@@ -28,7 +27,6 @@ size :: Ordinal -> Int
 size Zero = 0
 size (Ord a n b) = 1 + (size a) + n*n + (size b)
 
-{-@ type NFOrd = {v:Ordinal | normal v} @-}
 {-@ reflect normal @-}
 normal :: Ordinal -> Bool
 normal Zero = True
@@ -36,39 +34,46 @@ normal (Ord a n b) = (normal a) && (n > 0) && (normal b) && (case b of
     Zero -> True
     (Ord c _ _) -> (comp c a == LT))
 
-{-@ instance Ord NFOrd where compare :: NFOrd -> NFOrd -> Ordering @-}
-instance Ord Ordinal where compare = comp
+----------------------------------------------------------------
+
+-- Ordinals in Cantor Normal Form:
+{-@ type NFOrd = {v:Ordinal | normal v} @-}
+
+-- Until LH supports typeclasses with directly refined types, need this wrapper:
+{-@ data NFO = NFO { nfo :: NFOrd } @-}
+data NFO = NFO Ordinal deriving (Eq)
+
+{-@ zero :: NFO @-}
+zero    = NFO zero'
+{-@ one :: NFO @-}
+one     = NFO one'
+{-@ w :: NFO @-}
+w       = NFO w'
+{-@ ω :: NFO @-}
+ω       = w
+
+{-@ instance Ord NFO where compare :: NFO -> NFO -> Ordering @-}
+instance Ord NFO where compare (NFO x) (NFO y) = comp x y
 
 {-@ 
-instance Num NFOrd where 
-    (+) :: NFOrd -> NFOrd -> NFOrd  ;
-    (-) :: NFOrd -> NFOrd -> NFOrd  ;
-    (*) :: NFOrd -> NFOrd -> NFOrd  ;
-    abs :: NFOrd -> NFOrd           ;
-    signum :: NFOrd -> NFOrd        ;
-    fromInteger :: Integer -> NFOrd
+instance Num NFO where 
+    (+) :: NFO -> NFO -> NFO        ;
+    (-) :: NFO -> NFO -> NFO        ;
+    (*) :: NFO -> NFO -> NFO        ;
+    abs :: NFO -> NFO               ;
+    signum :: NFO -> NFO            ;
+    fromInteger :: Integer -> NFO
 @-}
-instance Num Ordinal where
-    (+) = add'  -- TODO: why doesn't add work?
-    (-) = sub'  -- TODO: why doesn't sub work?
-    (*) = mul'  -- TODO: why doesn't mul work?
+instance Num NFO where
+    (+) (NFO x) (NFO y) = NFO $ add x y 
+    (-) (NFO x) (NFO y) = NFO $ sub x y
+    (*) (NFO x) (NFO y) = NFO $ mul x y
     abs = id
     signum = const one
-    fromInteger = n2o' . abs' . fromIntegral
+    fromInteger i = NFO $ n2o . abs' . fromIntegral $ i
 
-{-@ instance Show NFOrd where show :: NFOrd -> String @-}
-instance Show Ordinal where
-    show Zero = "0"
-    show (Ord Zero n Zero) = (show n)
-    show (Ord a n b) = (f a) ++ (g n) ++ (h b)
-        where
-            f (Ord Zero 1 Zero) = "ω"
-            f (Ord Zero x Zero) = "ω^" ++ (show x)
-            f a = "ω^(" ++ (show a) ++ ")"
-            g 1 = ""
-            g n = "*" ++ (show n)
-            h Zero = ""
-            h b = " + " ++ (show b)
+{-@ instance Show NFO where show :: NFO -> String @-}
+instance Show NFO where show (NFO x) = str x
 
 ----------------------------------------------------------------
 
@@ -158,14 +163,12 @@ abs' n
   | otherwise = 0 - n
 
 
-{-@ zero :: NFOrd @-}
-zero    = n2o 0
-{-@ one :: NFOrd @-}
-one     = n2o 1
-{-@ w :: NFOrd @-}
-w       = let w = (Ord one 1 Zero) in w `withProof` [normal Zero, normal w]
-{-@ ω :: NFOrd @-}
-ω       = w
+{-@ zero' :: NFOrd @-}
+zero'   = n2o 0
+{-@ one' :: NFOrd @-}
+one'    = n2o 1
+{-@ w' :: NFOrd @-}
+w'      = let w' = (Ord one' 1 Zero) in w' `withProof` [normal Zero, normal w']
 
 ----
 
@@ -261,14 +264,29 @@ mul x y = (mul' x y) `withProof` (normal_mul x y)
 
 ----------------------------------------------------------------
 
+---- INSTANCE SHOW ---- 
+
+str :: Ordinal -> String
+str Zero = "0"
+str (Ord Zero n Zero) = (show n)
+str (Ord a n b) = (f a) ++ (g n) ++ (h b)
+    where
+        f (Ord Zero 1 Zero) = "ω"
+        f (Ord Zero n Zero) = "ω^" ++ (show n)
+        f a = "ω^(" ++ (str a) ++ ")"
+        g 1 = ""
+        g n = "*" ++ (show n)
+        h Zero = ""
+        h b = " + " ++ (str b)
+
+----------------------------------------------------------------
+
 main = do
     print $ "start"
-    print $ (w `mul` w `mul` (fromInteger 5)) `add` one `add` one
-    -- print $ w * 5                                    -- TODO
-    -- print $ (w * w * (fromInteger 5)) + one + one    -- TODO
+    print $ w * 5
+    print $ (w * w * 5) + one + one
     print $ compare one w
     print $ abs w * signum w
-    print $ w * (fromInteger 5)
     
 
 

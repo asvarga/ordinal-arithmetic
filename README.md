@@ -30,6 +30,7 @@ To type-check refinements and proofs:
 
 ### TODO
 
+- separate show
 - prove closure under exponentiation
 - decouple LH from main haskell (if possible)
 - get LH to work properly with typeclasses (if possible)
