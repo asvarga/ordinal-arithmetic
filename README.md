@@ -32,6 +32,7 @@ Note that **ordinals_LH.hs** can be run as a normal Haskell file.
 
 ### TODO
 
+- "reverse" Ordinals so units are constant-time accessible
 - prove closure under exponentiation
 - decouple LH from main haskell (if possible)
 - silence [these warnings](https://github.com/ucsd-progsys/liquidhaskell/issues/1242) (if possible)
