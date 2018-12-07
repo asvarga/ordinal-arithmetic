@@ -95,12 +95,12 @@ op LT = GT
 op GT = LT
 op EQ = EQ
 
-{-@ eq_is_eq :: x:Ordinal -> y:Ordinal -> {(comp x y == EQ) <=> (x == y)} @-}
-eq_is_eq :: Ordinal -> Ordinal -> ()
-eq_is_eq x@Zero y@Zero = (x `comp` y == EQ) *** QED
-eq_is_eq x@Zero y@(Ord a1 n1 b1) = ((x `comp` y == EQ) == False) *** QED
-eq_is_eq x@(Ord a0 n0 b0) y@Zero = ((x `comp` y == EQ) == False) *** QED
-eq_is_eq x@(Ord a0 n0 b0) y@(Ord a1 n1 b1) = ((x `comp` y == EQ) == (x == y))
+{-@ total :: x:Ordinal -> y:Ordinal -> {(comp x y == EQ) <=> (x == y)} @-}
+total :: Ordinal -> Ordinal -> ()
+total x@Zero y@Zero = (x `comp` y == EQ) *** QED
+total x@Zero y@(Ord a1 n1 b1) = ((x `comp` y == EQ) == False) *** QED
+total x@(Ord a0 n0 b0) y@Zero = ((x `comp` y == EQ) == False) *** QED
+total x@(Ord a0 n0 b0) y@(Ord a1 n1 b1) = ((x `comp` y == EQ) == (x == y))
     === (case (a0 `comp` a1) of
             LT -> (False == (x == y))
             GT -> (False == (x == y))
@@ -108,7 +108,7 @@ eq_is_eq x@(Ord a0 n0 b0) y@(Ord a1 n1 b1) = ((x `comp` y == EQ) == (x == y))
                 LT -> (False == (x == y))
                 GT -> (False == (x == y))
                 EQ -> ((x `comp` y == EQ) == (x == y)))
-    ==? True ? (eq_is_eq a0 a1 &&& eq_is_eq b0 b1) *** QED
+    ==? True ? (total a0 a1 &&& total b0 b1) *** QED
 
 {-@ op_op :: x:Ordering -> {op (op x) == x} @-}
 op_op x = op (op x) == x *** QED
@@ -178,7 +178,7 @@ normal_add x@(Ord a0 n0 b0) y@(Ord a1 n1 b1) = normal (add' x y)
             EQ -> (normal (Ord a0 (n0+n1) (add' b0 b1))))
     ==? True ? ((normal x *** QED)
                  &&& (normal y *** QED)
-                 &&& eq_is_eq a1 a0
+                 &&& total a1 a0
                  &&& normal_add b0 b1
                  &&& normal_add b0 y) *** QED
 {-@ add :: NFOrd -> NFOrd -> NFOrd @-}
