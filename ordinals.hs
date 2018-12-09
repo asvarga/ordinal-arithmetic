@@ -1,6 +1,8 @@
 
 -- An implementation of ordinal arithmetic
 
+module Ordinals where
+
 import Prelude hiding ((^))
 import qualified Prelude as P ((^))
 

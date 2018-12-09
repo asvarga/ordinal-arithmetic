@@ -5,8 +5,8 @@ A (somewhat) verified Liquid Haskell implementation of ordinal arithmetic.
 
 ### Files
 
-- **ordinals.hs** : Plain Haskell implementation
-- **ordinals_LH.hs** : Liquid Haskell implementation
+- **Ordinals.hs** : Plain Haskell implementation
+- **Ordinals_LH.hs** : Liquid Haskell implementation
 - **Haskell.sublime-build** : Build file for LH with Sublime
 - **NewProofCombinators.hs** : File copied from LH repo because of dependency issues
 
